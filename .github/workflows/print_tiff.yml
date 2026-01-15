@@ -1,0 +1,52 @@
+name: WebP to Print TIFF (Real-ESRGAN)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "HL03-HolosAndamanEmerald-Minimale.webp"
+      - "scripts/**"
+      - ".github/workflows/print_tiff.yml"
+      - "requirements.txt"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip libvulkan1 mesa-vulkan-drivers
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Download Real-ESRGAN portable (ncnn-vulkan)
+        run: |
+          mkdir -p tools/realesrgan
+          wget -O tools/realesrgan/realesrgan.zip "https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip"
+          unzip -o tools/realesrgan/realesrgan.zip -d tools/realesrgan/
+          BIN_PATH="$(find tools/realesrgan -type f -name 'realesrgan-ncnn-vulkan' | head -n 1)"
+          chmod +x "$BIN_PATH"
+          echo "REALESRGAN_BIN=$BIN_PATH" >> $GITHUB_ENV
+
+      - name: Run pipeline
+        run: |
+          python scripts/pipeline.py
+
+      - name: Upload output artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: print-tiff-output
+          path: output/*
+          if-no-files-found: error
