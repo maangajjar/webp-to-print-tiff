@@ -1,10 +1,10 @@
-name: WebP to Print TIFF (Real-ESRGAN)
+name: WebP/JPG to Print TIFF (Real-ESRGAN)
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - "HL03-HolosAndamanEmerald-Minimale.webp"
+      - "input/**"
       - "scripts/**"
       - ".github/workflows/print_tiff.yml"
       - "requirements.txt"
